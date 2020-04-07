@@ -18,6 +18,7 @@ limitations under the License.
 package kubeadmjoin
 
 import (
+	"fmt"
 	"strings"
 
 	"sigs.k8s.io/kind/pkg/cluster/constants"
@@ -129,6 +130,7 @@ func runKubeadmJoin(logger log.Logger, node nodes.Node) error {
 		// increase verbosity for debugging
 		"--v=6",
 	)
+	logger.V(0).Info(fmt.Sprintf("Join COmmand %s == %s", node.String(), cmd))
 	lines, err := exec.CombinedOutputLines(cmd)
 	logger.V(0).Info(strings.Join(lines, "\n"))
 	if err != nil {
