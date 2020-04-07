@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net"
 	"path/filepath"
+	"sigs.k8s.io/kind/pkg/internal/cli"
 	"strings"
 
 	"sigs.k8s.io/kind/pkg/cluster/constants"
@@ -32,7 +33,7 @@ import (
 )
 
 // planCreation creates a slice of funcs that will create the containers
-func planCreation(cluster string, cfg *config.Cluster) (createContainerFuncs []func() error, err error) {
+func planCreation(status *cli.Status, cluster string, cfg *config.Cluster) (createContainerFuncs []func() error, err error) {
 	// these apply to all container creation
 	nodeNamer := common.MakeNodeNamer(cluster)
 	genericArgs, err := commonArgs(cluster, cfg)
@@ -52,7 +53,7 @@ func planCreation(cluster string, cfg *config.Cluster) (createContainerFuncs []f
 		// plan loadbalancer node
 		name := nodeNamer(constants.ExternalLoadBalancerNodeRoleValue)
 		createContainerFuncs = append(createContainerFuncs, func() error {
-			return createContainer(runArgsForLoadBalancer(cfg, name, genericArgs))
+			return createContainer(status, runArgsForLoadBalancer(cfg, name, genericArgs))
 		})
 	}
 
@@ -82,11 +83,11 @@ func planCreation(cluster string, cfg *config.Cluster) (createContainerFuncs []f
 						ContainerPort: common.APIServerInternalPort,
 					},
 				)
-				return createContainer(runArgsForNode(node, name, genericArgs))
+				return createContainer(status, runArgsForNode(node, name, genericArgs))
 			})
 		case config.WorkerRole:
 			createContainerFuncs = append(createContainerFuncs, func() error {
-				return createContainer(runArgsForNode(node, name, genericArgs))
+				return createContainer(status, runArgsForNode(node, name, genericArgs))
 			})
 		default:
 			return nil, errors.Errorf("unknown node role: %q", node.Role)
@@ -95,7 +96,8 @@ func planCreation(cluster string, cfg *config.Cluster) (createContainerFuncs []f
 	return createContainerFuncs, nil
 }
 
-func createContainer(args []string) error {
+func createContainer(status *cli.Status, args []string) error {
+	status.StartHack(fmt.Sprintf("Create container %s", args ))
 	if err := exec.Command("docker", args...).Run(); err != nil {
 		return errors.Wrap(err, "docker run error")
 	}

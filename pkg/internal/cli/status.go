@@ -57,6 +57,9 @@ func StatusForLogger(l log.Logger) *Status {
 
 // Start starts a new phase of the status, if attached to a terminal
 // there will be a loading spinner with this status
+func (s *Status) StartHack(status string) {
+	s.logger.V(0).Infof(" • %s  ...\n", status)
+}
 func (s *Status) Start(status string) {
 	s.End(true)
 	// set new status

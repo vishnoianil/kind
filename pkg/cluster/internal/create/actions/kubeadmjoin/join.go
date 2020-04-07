@@ -130,7 +130,7 @@ func runKubeadmJoin(logger log.Logger, node nodes.Node) error {
 		"--v=6",
 	)
 	lines, err := exec.CombinedOutputLines(cmd)
-	logger.V(3).Info(strings.Join(lines, "\n"))
+	logger.V(0).Info(strings.Join(lines, "\n"))
 	if err != nil {
 		return errors.Wrap(err, "failed to join node with kubeadm")
 	}
